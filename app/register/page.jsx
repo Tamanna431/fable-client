@@ -2,20 +2,22 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@heroui/react";
-import { BookOpen, Eye, EyeSlash, Envelope, Lock, Person } from "@gravity-ui/icons";
+import Link from "next/link";
+import { Button } from "@heroui/react";
+import { Eye, EyeSlash } from "@gravity-ui/icons";
 import { useAuth } from "@/context/AuthContext";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import toast from "react-hot-toast";
+
+const inputClass =
+  "w-full bg-white/5 border border-purple-500/20 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 outline-none focus:border-purple-500 transition text-base";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     role: "user",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -29,14 +31,6 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
     setLoading(true);
     try {
       const resData = await register({
@@ -46,7 +40,7 @@ export default function RegisterPage() {
         role: formData.role,
       });
       const name = resData?.user?.fullName || formData.fullName;
-      toast.success(`Account created successfully! Welcome, ${name.split(" ")[0]}! 🎉`);
+      toast.success(`Welcome, ${name.split(" ")[0]}! Account created 🎉`);
       router.push("/");
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed.");
@@ -58,101 +52,77 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background orbs */}
-      <div className="orb orb-purple w-96 h-96 -top-20 -left-20 opacity-20" />
-      <div className="orb orb-indigo w-80 h-80 bottom-0 right-0 opacity-15" />
+      <div className="absolute w-96 h-96 rounded-full bg-purple-600/20 blur-3xl -top-20 -left-20 pointer-events-none" />
+      <div className="absolute w-80 h-80 rounded-full bg-indigo-600/15 blur-3xl bottom-0 right-0 pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 group mb-6">
-            <div className="w-10 h-10 rounded-xl bg-purple-gradient flex items-center justify-center group-hover:scale-110 transition-transform">
-              <BookOpen className="text-white" width={22} height={22} />
+        {/* Form Card */}
+        <div className="bg-white/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-8 shadow-2xl shadow-purple-900/20">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-white mb-1">Create Account</h1>
+            <p className="text-slate-400 text-sm">Join the Fable community today</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Full Name */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-300">Full Name</label>
+              <input
+                name="fullName"
+                type="text"
+                placeholder="Tamanna Akter"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+                className={inputClass}
+              />
             </div>
-            <span className="text-2xl font-black font-heading gradient-text">Fable</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-slate-400 text-sm">Join the Fable community today</p>
-        </div>
 
-        {/* Form */}
-        <div className="glass-card p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Input
-              name="fullName"
-              label="Full Name"
-              placeholder="John Doe"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              startContent={<Person className="text-slate-400" width={16} height={16} />}
-              classNames={{
-                inputWrapper: "bg-white/5 border border-purple-500/20 hover:border-purple-500/40 focus-within:border-purple-500 data-[focused=true]:border-purple-500",
-                input: "text-white placeholder:text-slate-500",
-                label: "text-slate-400",
-              }}
-            />
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-300">Email</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className={inputClass}
+              />
+            </div>
 
-            <Input
-              name="email"
-              type="email"
-              label="Email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              startContent={<Envelope className="text-slate-400" width={16} height={16} />}
-              classNames={{
-                inputWrapper: "bg-white/5 border border-purple-500/20 hover:border-purple-500/40 focus-within:border-purple-500",
-                input: "text-white placeholder:text-slate-500",
-                label: "text-slate-400",
-              }}
-            />
-
-            <Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              label="Password"
-              placeholder="Min 6 characters"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              startContent={<Lock className="text-slate-400" width={16} height={16} />}
-              endContent={
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-white">
-                  {showPassword ? <EyeSlash width={16} height={16} /> : <Eye width={16} height={16} />}
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-300">Password</label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min 6 characters"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className={`${inputClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                >
+                  {showPassword ? <EyeSlash width={18} height={18} /> : <Eye width={18} height={18} />}
                 </button>
-              }
-              classNames={{
-                inputWrapper: "bg-white/5 border border-purple-500/20 hover:border-purple-500/40 focus-within:border-purple-500",
-                input: "text-white placeholder:text-slate-500",
-                label: "text-slate-400",
-              }}
-            />
-
-            <Input
-              name="confirmPassword"
-              type="password"
-              label="Confirm Password"
-              placeholder="Repeat password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              startContent={<Lock className="text-slate-400" width={16} height={16} />}
-              classNames={{
-                inputWrapper: "bg-white/5 border border-purple-500/20 hover:border-purple-500/40 focus-within:border-purple-500",
-                input: "text-white placeholder:text-slate-500",
-                label: "text-slate-400",
-              }}
-            />
+              </div>
+            </div>
 
             {/* Role Selection */}
-            <div>
-              <p className="text-sm text-slate-400 mb-3">I want to join as:</p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-300">I want to join as:</p>
               <div className="grid grid-cols-2 gap-3">
                 {["user", "writer"].map((role) => (
                   <button
@@ -166,7 +136,7 @@ export default function RegisterPage() {
                     }`}
                   >
                     <div className="text-xl mb-1">{role === "user" ? "📖" : "✍️"}</div>
-                    <div className="font-semibold capitalize text-sm">{role === "user" ? "Reader" : "Writer"}</div>
+                    <div className="font-semibold text-sm">{role === "user" ? "Reader" : "Writer"}</div>
                     <div className="text-xs opacity-70 mt-0.5">
                       {role === "user" ? "Browse & purchase ebooks" : "Publish & sell ebooks"}
                     </div>
@@ -175,27 +145,29 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Submit */}
             <Button
               type="submit"
               isLoading={loading}
-              className="glow-btn w-full text-white font-bold py-6 text-base mt-2"
+              className="w-full bg-gradient-to-r from-violet-600 to-purple-500 text-white font-bold py-6 text-base mt-1 shadow-lg shadow-purple-500/30 hover:opacity-90"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
-          <div className="mt-6 flex items-center justify-between">
-            <span className="border-b border-purple-500/20 w-1/5 lg:w-1/4"></span>
-            <span className="text-xs text-center text-slate-400 uppercase">Or continue with</span>
-            <span className="border-b border-purple-500/20 w-1/5 lg:w-1/4"></span>
+          {/* Divider */}
+          <div className="mt-5 flex items-center gap-3">
+            <span className="flex-1 border-t border-purple-500/20" />
+            <span className="text-xs text-slate-400 uppercase">Or continue with</span>
+            <span className="flex-1 border-t border-purple-500/20" />
           </div>
 
-          {/* Real Google Sign-In — passes selected role (reader/writer) */}
+          {/* Google Button */}
           <div className="mt-3">
             <GoogleLoginButton role={formData.role} redirectTo="/" />
           </div>
 
-          <p className="text-center text-slate-400 text-sm mt-6">
+          <p className="text-center text-slate-400 text-sm mt-5">
             Already have an account?{" "}
             <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
               Sign In
